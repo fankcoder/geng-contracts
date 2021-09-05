@@ -12,6 +12,7 @@ contract Geng is ERC721URIStorage, ERC721Enumerable, SecurityBase
     Counters.Counter private _tokenIds;
 
     mapping(uint256 => string) private _GengMap;
+    mapping(string => uint256) private _CheckGengMap;
 
     event GengCreated(uint256 tokenId, address owner, string geng);
 
@@ -51,14 +52,20 @@ contract Geng is ERC721URIStorage, ERC721Enumerable, SecurityBase
     
     function safeMintGeng(address to, string memory geng) public whenNotPaused onlyMinter returns (uint256) {
         require(bytes(geng).length <= 128, "geng over bytes32 length 128");
+        require(_CheckGengMap[geng] <= 0, "this geng already mint in chain");
         _tokenIds.increment();
         uint256 tokenId = _tokenIds.current();
         _safeMint(to, tokenId);
         _GengMap[tokenId] = geng;
+        _CheckGengMap[geng] = tokenId;
         return tokenId;
     }
 
     function mintTransform(address from, address to, uint256 tokenId) public whenNotPaused onlyMinter {
         _transfer(from, to, tokenId);
+    }
+
+    function mintBurn(uint256 tokenId) public whenNotPaused onlyMinter {
+        _burn(tokenId);
     }
 }
