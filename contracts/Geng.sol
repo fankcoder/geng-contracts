@@ -10,6 +10,7 @@ contract Geng is ERC721URIStorage, ERC721Enumerable, SecurityBase
 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+    bool private transferFlag = true;
 
     mapping(uint256 => string) private _GengMap;
     mapping(string => uint256) private _CheckGengMap;
@@ -58,10 +59,31 @@ contract Geng is ERC721URIStorage, ERC721Enumerable, SecurityBase
         _safeMint(to, tokenId);
         _GengMap[tokenId] = geng;
         _CheckGengMap[geng] = tokenId;
+        emit GengCreated(tokenId, to, geng);
         return tokenId;
     }
 
+    function checkGeng(string memory geng) public view returns (bool) {
+        uint256 _tokenId = _CheckGengMap[geng];
+        if (_tokenId > 0){
+            return true;
+        }
+        if (_tokenId <= 0){
+            return false;
+        }
+    }
+
+    function getGeng(uint256 tokenId) public view returns (string memory) {
+        require(_exists(tokenId), "Nonexistent token");
+        return _GengMap[tokenId];
+    }
+
+    function CloseMintTransfer() public whenNotPaused onlyMinter {
+        transferFlag = false;
+    }
+
     function mintTransform(address from, address to, uint256 tokenId) public whenNotPaused onlyMinter {
+        require(transferFlag == true, "can't transfer when flag is close");
         _transfer(from, to, tokenId);
     }
 
